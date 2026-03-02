@@ -58,16 +58,16 @@ O maior gargalo inicial foi a latência de ingestão vetorial. Os gráficos demo
 ### 2. Pipeline RAG na Prática
 
 * **Inicialização:** App carregando os modelos na memória e aguardando o arquivo.
-  ![App Inicial](img/Captura_de_tela_2026-03-02_135752.png)
+  ![App Inicial](img/inicio2.png)
 
 * **Ingestão e Vetorização:** O PDF de 276 páginas processado e convertido em **1024 chunks semânticos** no ChromaDB.
-  ![Processamento PDF](img/Captura_de_tela_2026-03-02_135921.png)
+  ![Processamento PDF](img/inicio4.png)
 
 * **Inferência e Resposta Exata:** A IA cruza dados de diferentes páginas para entregar o Preço Interno de Carbono e a meta de Escopo 1 e 2.
-  ![Resposta Gerada](img/Captura_de_tela_2026-03-02_135958.png)
+  ![Resposta Gerada](img/resposta.png)
 
 * **Auditoria de Metadados:** Rastreabilidade dos blocos textuais exatos que o modelo utilizou como base.
-  ![Auditoria JSON](img/Captura_de_tela_2026-03-02_140040.png)
+  ![Auditoria JSON](img/fim.png)
 
 ---
 
