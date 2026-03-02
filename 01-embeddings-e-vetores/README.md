@@ -43,6 +43,45 @@ O desenvolvimento desta Fase 1 exigiu refatorações profundas para equilibrar a
 
 ---
 
+## 🖥️ Engenharia de Software e Desenvolvimento da Interface
+Embora o núcleo do projeto seja a Engenharia de Dados (pipelines e vetorização), uma camada de Engenharia de Software foi aplicada para transformar scripts de backend em um produto de dados acessível e interativo.
+
+* **Framework:** Utilização do `Streamlit` em Python para construção de uma interface web reativa.
+* **State Management:** Controle de sessão (`st.session_state`) para manter o banco vetorial e os modelos carregados em cache, evitando o reprocessamento desnecessário durante a troca de mensagens.
+* **UX/UI:** Desenvolvimento de um fluxo claro com barra lateral para upload de documentos, alertas de processamento (spinners) e uma seção de auditoria transparente (expander) para o usuário validar os trechos do documento original utilizados pela IA.
+
+---
+
+## 📸 Fluxo de Uso e Evidências Visuais
+
+Abaixo, a sequência lógica de funcionamento da aplicação e as provas de otimização de infraestrutura.
+
+### 1. Otimização de Infraestrutura (CPU vs GPU)
+O maior gargalo inicial foi a latência de ingestão vetorial. Os gráficos abaixo demonstram a migração do processamento matemático da CPU para o processamento paralelo em GPU (CUDA), resolvendo o limite de VRAM através da readequação de lotes.
+
+* **Antes (Gargalo em CPU):** Alta carga no processador principal e lentidão na criação dos embeddings.
+  ![Gargalo CPU](C:\Users\brnfa\Projetos e estudos\AI-Financial-Insights\img\alta_latencia_modelo_CPU.png)
+
+* **Depois (Aceleração em GPU):** Placa de vídeo assumindo a carga tensorial, reduzindo o tempo de ingestão de minutos para segundos, mantendo a estabilidade da memória.
+  ![Otimização GPU](C:\Users\brnfa\Projetos e estudos\AI-Financial-Insights\img\baixa_latencia_modelo_GPU.png)
+
+### 2. Interface e Pipeline RAG em Ação
+O ciclo de vida do dado, desde o upload do Relatório ESG até a inferência do Llama-3.3-70B.
+
+* **Inicialização:** App carregando os modelos na memória e aguardando o arquivo base.
+  ![App Inicial](C:\Users\brnfa\Projetos e estudos\AI-Financial-Insights\img\inicio2.png)
+
+* **Ingestão e Vetorização:** O PDF de 276 páginas foi lido, fatiado e convertido com sucesso em **1024 chunks** semânticos armazenados no ChromaDB local.
+  ![Processamento PDF](C:\Users\brnfa\Projetos e estudos\AI-Financial-Insights\img\inicio4.png)
+
+* **Inferência:** O usuário faz uma pergunta complexa de negócios e o LLM gera a resposta instantânea cruzando os dados recuperados.
+  ![Resposta Gerada](C:\Users\brnfa\Projetos e estudos\AI-Financial-Insights\img\resposta.png)
+
+* **Transparência e Auditoria:** O sistema exibe o JSON com os metadados dos chunks exatos (página, origem, texto) utilizados para formular a resposta, garantindo a rastreabilidade exigida no setor financeiro.
+  ![Auditoria JSON](C:\Users\brnfa\Projetos e estudos\AI-Financial-Insights\img\fim.png)
+
+---
+
 ## 🚀 Próximos Passos (Roadmap do Projeto)
 
 A aplicação continuará escalando para se tornar uma solução completa de Governança de Dados Corporativos, englobando:
