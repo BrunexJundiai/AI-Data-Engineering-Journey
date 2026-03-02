@@ -9,86 +9,70 @@ Foco na construção de uma arquitetura de *Retrieval-Augmented Generation* (RAG
 * **Embeddings (Vetorização):** `intfloat/multilingual-e5-small` (HuggingFace).
 * **Banco de Dados Vetorial:** ChromaDB (Persistente local).
 * **Processamento:** CUDA (NVIDIA GPU) para processamento paralelo em tensores.
-* **Interface:** Streamlit.
+* **Interface (Front-end):** Streamlit.
 
 ## 🏗️ Projeto Prático / Laboratório
-* **O Desafio:** Criar um Auditor de IA capaz de processar e interpretar um Relatório ESG bancário de 275 páginas localmente, extraindo métricas exatas sem alucinação, enfrentando o gargalo de uma infraestrutura local com limite de 2GB de VRAM na GPU.
+* **O Desafio:** Criar um Auditor de IA capaz de processar e interpretar um Relatório ESG bancário de 276 páginas localmente, extraindo métricas exatas sem alucinação, enfrentando o gargalo de uma infraestrutura local com limite de 2GB de VRAM na GPU.
 * **A Solução:** Um pipeline de ingestão otimizado que fatia o documento respeitando os limites de *tokens* do modelo de embeddings, utiliza processamento em lotes (`batch_size`) na placa de vídeo e orquestra a recuperação de múltiplos contextos simultâneos para o LLM.
 * **Resultado:** Redução drástica na latência de ingestão (migração CPU para GPU) e respostas com 100% de precisão na localização de valores financeiros e normativas de Risco Climático.
 
 ---
 
-## ⚙️ Log de Engenharia e Decisões de Arquitetura
+## ⚙️ Log de Engenharia e Decisões de Arquitetura (Motivos das Alterações)
 
-O desenvolvimento desta Fase 1 exigiu refatorações profundas para equilibrar a inteligência do modelo com as restrições de hardware.
+O desenvolvimento desta aplicação exigiu refatorações profundas na arquitetura inicial para equilibrar a inteligência do modelo com as restrições de hardware e a densidade das regras de negócio.
 
-**1. Evolução do Modelo de Embeddings e Gestão de VRAM:**
-* A arquitetura iniciou com o modelo `MiniLM`, migrando para o `BAAI/bge-m3` devido à sua superioridade multilíngue e capacidade de ler textos densos.
-* **Problema:** O processamento via CPU gerava uma latência impraticável. A migração para GPU (CUDA) esbarrou no limite físico de 2GB de VRAM da máquina (`CUDA Out of memory`).
-* **Solução:** *Downgrade* estratégico para o modelo `intfloat/multilingual-e5-small`. Ele consome pouca VRAM, é altamente veloz e foi desenhado especificamente para tarefas de RAG.
-
-**2. Engenharia de Chunking e Limites de Tokens:**
-* Para relatórios ESG, tabelas de emissões e notas explicativas precisam ficar no mesmo bloco semântico. 
-* **Ajuste Fino:** Com a adoção do modelo `e5-small`, o tamanho do bloco (`chunk_size`) precisou ser reduzido para **1000 caracteres** com `overlap` de **200**. Isso foi necessário para respeitar o limite máximo estrito de 512 *tokens* do modelo, evitando o truncamento silencioso de dados críticos pelo motor do HuggingFace.
-
-**3. Compensação na Janela de Recuperação (Retriever):**
-* Ao reduzir o tamanho do *chunk* pela metade, o LLM perderia contexto.
-* **Solução:** O parâmetro de busca (`search_kwargs={"k": 15}`) foi elevado. O sistema agora recupera os 15 blocos mais relevantes, garantindo que o `Llama-3.3-70B` receba cerca de 15.000 caracteres de contexto para cruzar dados antes de formular a resposta.
-
-**4. Otimização de Processamento em Lote:**
-* Implementação de `model_kwargs={'device': 'cuda'}` e `encode_kwargs={'normalize_embeddings': True, 'batch_size': 8}`. Lotes menores (8) garantiram fluidez na GPU sem estourar a memória durante a vetorização massiva do PDF. Correção de erros de bloqueio de banco de dados (`Code: 13`) expurgando a pasta raiz do ChromaDB para realinhar as novas dimensões vetoriais.
-
-**5. Engenharia de Prompt (Zero-Shot Constraint):**
-* Alteração da persona da IA genérica para **Auditor de IA em Compliance ESG e Risco Climático**. Adição de travas condicionais forçando rigor metrológico (toneladas de CO2e, R$) e blindagem contra alucinações de dados não constantes no texto recuperado.
+1. **Evolução do Modelo de Embeddings:** Saída do modelo básico `MiniLM` para o robusto `BAAI/bge-m3` buscando excelência multilíngue e precisão corporativa. Posteriormente, devido ao estouro de limite de memória da máquina (2GB VRAM), foi feito um ajuste estratégico para o `intfloat/multilingual-e5-small`.
+2. **LLM de Alto Nível:** Manutenção do modelo `llama-3.3-70b-versatile`. Relatórios ESG contêm referências cruzadas e lógicas financeiras densas. Modelos menores (8B) se perdem nesse nível de abstração.
+3. **Gestão de VRAM e Processamento em Lote:** Para viabilizar a vetorização massiva sem corromper o banco ChromaDB (evitando o erro *Code: 13*), a carga foi passada para a GPU (`device: cuda`) com normalização ativada (`normalize_embeddings: True`) e redução de fila (`batch_size: 8`).
+4. **Readequação de Chunking para ESG:** O fatiamento foi ajustado para `chunk_size = 1000` e `chunk_overlap = 200`. Isso garante que tabelas de emissões e suas notas explicativas não sejam separadas, além de respeitar o limite máximo estrito de 512 *tokens* do modelo `e5-small` (evitando truncamento silencioso).
+5. **Expansão da Janela de Recuperação (Retriever k=15):** Como os *chunks* ficaram menores, a busca no banco vetorial foi ampliada de 3 para 15 documentos (`k=15`). Isso envia cerca de 15.000 caracteres de contexto para o Llama-3.3-70B cruzar múltiplas variáveis antes de responder.
+6. **Consistência de Sessão (State Management):** Padronização do Retriever em cache para garantir que, ao recarregar a aplicação ou aproveitar o banco persistente, a regra de negócio da fase de ingestão permaneça inalterada.
+7. **Engenharia de Prompt para Auditoria ESG:** O LLM foi instruído a assumir a persona de um "Auditor de IA em Compliance ESG e Risco Climático". Foram adicionadas travas *Zero-Shot* (zero alucinação) e exigência de rigor metrológico (ex: precisão com tCO2e e valores em R$).
+8. **UI/UX e Direcionamento Cognitivo:** Alteração dos *placeholders* no front-end para educar o usuário a fazer perguntas complexas (ex: "Preço Interno de Carbono"), incentivando o teste de estresse da ferramenta.
 
 ---
 
-## 🖥️ Engenharia de Software e Desenvolvimento da Interface
-Embora o núcleo do projeto seja a Engenharia de Dados (pipelines e vetorização), uma camada de Engenharia de Software foi aplicada para transformar scripts de backend em um produto de dados acessível e interativo.
+## 🖥️ Engenharia de Software e Interface
 
-* **Framework:** Utilização do `Streamlit` em Python para construção de uma interface web reativa.
-* **State Management:** Controle de sessão (`st.session_state`) para manter o banco vetorial e os modelos carregados em cache, evitando o reprocessamento desnecessário durante a troca de mensagens.
-* **UX/UI:** Desenvolvimento de um fluxo claro com barra lateral para upload de documentos, alertas de processamento (spinners) e uma seção de auditoria transparente (expander) para o usuário validar os trechos do documento original utilizados pela IA.
+Embora o núcleo seja a engenharia de dados, uma camada de software foi aplicada para transformar o script em um produto de dados auditável.
+
+* **Framework:** Streamlit para interface web reativa.
+* **Transparência:** Criação de *expanders* para auditoria, permitindo que o usuário visualize os JSONs brutos extraídos do ChromaDB que justificam a resposta da IA.
 
 ---
 
 ## 📸 Fluxo de Uso e Evidências Visuais
 
-Abaixo, a sequência lógica de funcionamento da aplicação e as provas de otimização de infraestrutura.
+Abaixo, a documentação visual da otimização de infraestrutura e do pipeline RAG em ação.
 
 ### 1. Otimização de Infraestrutura (CPU vs GPU)
-O maior gargalo inicial foi a latência de ingestão vetorial. Os gráficos abaixo demonstram a migração do processamento matemático da CPU para o processamento paralelo em GPU (CUDA), resolvendo o limite de VRAM através da readequação de lotes.
+O maior gargalo inicial foi a latência de ingestão vetorial. Os gráficos demonstram a migração do processamento matemático da CPU para processamento paralelo em GPU (CUDA).
 
 * **Antes (Gargalo em CPU):** Alta carga no processador principal e lentidão na criação dos embeddings.
-  ![Gargalo CPU](img\alta_latencia_modelo_CPU.png)
+  ![Gargalo CPU](img/alta_latencia_modelo_CPU.png)
 
-* **Depois (Aceleração em GPU):** Placa de vídeo assumindo a carga tensorial, reduzindo o tempo de ingestão de minutos para segundos, mantendo a estabilidade da memória.
-  ![Otimização GPU](img\baixa_latencia_modelo_GPU.png)
+* **Depois (Aceleração em GPU):** Placa de vídeo assumindo a carga tensorial, reduzindo o tempo de ingestão de minutos para segundos.
+  ![Otimização GPU](img/baixa_latencia_modelo_GPU.png)
 
-### 2. Interface e Pipeline RAG em Ação
-O ciclo de vida do dado, desde o upload do Relatório ESG até a inferência do Llama-3.3-70B.
+### 2. Pipeline RAG na Prática
 
-* **Inicialização:** App carregando os modelos na memória e aguardando o arquivo base.
-  ![App Inicial](img\inicio2.png)
+* **Inicialização:** App carregando os modelos na memória e aguardando o arquivo.
+  ![App Inicial](img/Captura_de_tela_2026-03-02_135752.png)
 
-* **Ingestão e Vetorização:** O PDF de 276 páginas foi lido, fatiado e convertido com sucesso em **1024 chunks** semânticos armazenados no ChromaDB local.
-  ![Processamento PDF](img\inicio4.png)
+* **Ingestão e Vetorização:** O PDF de 276 páginas processado e convertido em **1024 chunks semânticos** no ChromaDB.
+  ![Processamento PDF](img/Captura_de_tela_2026-03-02_135921.png)
 
-* **Inferência:** O usuário faz uma pergunta complexa de negócios e o LLM gera a resposta instantânea cruzando os dados recuperados.
-  ![Resposta Gerada](img\resposta.png)
+* **Inferência e Resposta Exata:** A IA cruza dados de diferentes páginas para entregar o Preço Interno de Carbono e a meta de Escopo 1 e 2.
+  ![Resposta Gerada](img/Captura_de_tela_2026-03-02_135958.png)
 
-* **Transparência e Auditoria:** O sistema exibe o JSON com os metadados dos chunks exatos (página, origem, texto) utilizados para formular a resposta, garantindo a rastreabilidade exigida no setor financeiro.
-  ![Auditoria JSON](img\fim.png)
+* **Auditoria de Metadados:** Rastreabilidade dos blocos textuais exatos que o modelo utilizou como base.
+  ![Auditoria JSON](img/Captura_de_tela_2026-03-02_140040.png)
 
 ---
 
 ## 🚀 Próximos Passos (Roadmap do Projeto)
 
-A aplicação continuará escalando para se tornar uma solução completa de Governança de Dados Corporativos, englobando:
-
-* **Análise Comparativa Temporal:** Ingestão do Relatório ESG de 2025 (assim que publicado) para criar *prompts* de confrontamento e evolução de metas climáticas (2024 vs 2025).
-* **Escalabilidade e Persistência Avançada:** Migração ou otimização do banco vetorial para lidar com o acúmulo de múltiplos anos de relatórios.
-* **Busca Híbrida e Filtragem Avançada:** Combinação de busca semântica (vetores) com busca lexical (BM25) e metadados estruturados (ex: ano, diretoria, escopo de emissão).
-* **RAG Multimodal:** Implementação de inteligência para leitura de gráficos e infográficos complexos diretamente das imagens dos PDFs.
-* **Fine-Tuning:** Treinamento especializado do modelo de *embeddings* com vocabulário proprietário do setor bancário brasileiro.
-* **Agentes e Deploy:** Construção de memória transacional para o agente e *deploy* da aplicação em ambiente de produção (Cloud).
+* **Análise Comparativa Temporal:** Ingestão do Relatório ESG de 2025 para criar fluxos comparativos (2024 vs 2025).
+* **Busca Híbrida e Filtragem Avançada:** Combinação de busca semântica com busca lexical e metadados estruturados.
+* **RAG Multimodal:** Implementação de inteligência para leitura técnica de gráficos e infográficos ESG presentes no PDF.
