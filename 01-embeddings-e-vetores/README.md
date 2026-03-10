@@ -3,25 +3,29 @@
 ## 📝 Descrição do Módulo
 Foco na construção de uma arquitetura de *Retrieval-Augmented Generation* (RAG) para extração de dados densos em relatórios regulatórios de sustentabilidade. O projeto substitui buscas simples por palavras-chave por uma compreensão semântica profunda, permitindo cruzar métricas financeiras (ex: Preço Interno de Carbono) com metas climáticas (Escopos 1, 2 e 3).
 
-## 🛠️ Stack Tecnológica (V2)
+## 🛠️ Stack Tecnológica (V2.0 - Arquitetura Desacoplada)
 * **LLM (Motor Cognitivo):** `llama-3.3-70b-versatile` (via Groq API para inferência em milissegundos).
+* **Framework Orquestrador:** LangChain com arquitetura moderna **LCEL** (LangChain Expression Language).
 * **Embeddings (Vetorização local):** `intfloat/multilingual-e5-small` (HuggingFace).
-* **Extração Estrutural (ETL):** `PyMuPDF` (Fitz) e Expressões Regulares (`Regex`).
+* **Extração Estrutural (ETL):** `PyMuPDF` (Fitz) com ingestão em loop para **Múltiplos Documentos**.
 * **Banco de Dados Vetorial:** ChromaDB.
 * **Aceleração de Hardware:** CUDA (NVIDIA GPU) para processamento paralelo de tensores.
-* **Interface (Front-end):** Streamlit com renderização de metadados em JSON.
+* **Interface (Front-end):** Streamlit com Gestão de Estado (Session State) para Interface de Chat interativo e renderização de metadados em JSON.
+* **Paradigma de Software:** Orientação a Objetos (POO) com Separação de Preocupações (Backend/Frontend).
 
 ---
 
-## ⚙️ Engenharia de Dados: A Evolução para a V2.0
+## ⚙️ Engenharia de Dados e Software: A Evolução Definitiva
 
-Relatórios ESG do setor financeiro são "pesadelos estruturais" para IAs: possuem layouts em múltiplas colunas, tabelas quebradas entre páginas e uma infinidade de notas de rodapé. A V2 desta arquitetura resolveu esses gargalos reescrevendo o pipeline de ingestão:
+Relatórios ESG do setor financeiro são "pesadelos estruturais" para IAs: possuem layouts em múltiplas colunas, tabelas quebradas entre páginas e uma infinidade de notas de rodapé. Esta versão final resolveu os gargalos reescrevendo o pipeline de ingestão e a arquitetura de software:
 
-1. **Extração Estrutural de Tabelas (PyMuPDF):** Substituição de leitores de PDF ingênuos por um extrator que respeita o fluxo de leitura humano. Isso impediu que a IA misturasse os números do Escopo 1 com o Escopo 2 em tabelas complexas.
-2. **Sanitização de Dados (Noise Cleaning):** Implementação de uma camada de limpeza via *Regex* antes da vetorização. Remoção de quebras de linha invisíveis e caracteres nulos, o que reduziu o lote original de 1024 para apenas **641 chunks semânticos** altamente qualificados.
-3. **Data Enrichment (Injeção de Metadados):** O motor agora "carimba" a origem e o número exato da página fisicamente no início de cada bloco de texto. Isso obriga o LLM a fundamentar sua resposta apontando de onde tirou o dado.
-4. **Otimização Extrema de Hardware (2GB VRAM):** Para viabilizar a vetorização massiva em hardware local restrito, a carga foi transferida da CPU para a GPU (`device: cuda`), operando com lotes reduzidos (`batch_size: 8`) e janela de contexto ampliada (`k=15`) para não perder o raciocínio macro.
-5. **Zero-Shot Constraints (Anti-Alucinação):** Prompt de engenharia estrito configurado para a persona de Auditor de Compliance. Se a informação (ex: resultado de 2024 vs meta de 2025) não está clara no chunk, a IA trava e emite o alerta de segurança: *"A informação não consta nos documentos analisados"*.
+1. **Separação de Preocupações (POO):** O projeto migrou de um script monolítico para uma arquitetura profissional dividida em duas camadas: o Cérebro (`bbe_rag_engine.py` como classe Backend autônoma) e a Interface (`bbe_app.py` focado apenas em UI e histórico de chat).
+2. **Arquitetura LCEL e "Stuff" Manual:** Abandono de cadeias opacas (Legacy `RetrievalQA`) em favor da *LangChain Expression Language*. Os blocos de contexto recuperados agora são injetados de forma transparente no prompt, permitindo cruzamento de dados de alta precisão pelo Llama 3.
+3. **Extração Estrutural de Tabelas (PyMuPDF):** Substituição de leitores de PDF ingênuos por um extrator que respeita o fluxo de leitura humano. Isso impediu que a IA misturasse os números do Escopo 1 com o Escopo 2 em tabelas complexas.
+4. **Sanitização e Data Enrichment (Injeção de Metadados):** Implementação de uma camada de limpeza via *Regex* antes da vetorização. O motor "carimba" a origem e o número exato da página fisicamente no início de cada bloco de texto, obrigando o LLM a fundamentar sua resposta com a fonte.
+5. **Otimização Extrema de Hardware (2GB VRAM):** Para viabilizar a vetorização massiva em hardware local restrito, a carga foi transferida da CPU para a GPU (`device: cuda`), operando com lotes reduzidos (`batch_size: 8`) e janela de contexto ampliada (`k=15`) para não perder o raciocínio macro.
+6. **Zero-Shot Constraints e Teste de Estresse:** Prompt de engenharia estrito para a persona de Auditor de Compliance. Aprovado em testes de estresse para limites temporais e alucinações. Se a informação não está no chunk, a IA trava e emite o alerta: *"A informação não consta nos documentos analisados"*.
+7. **Ingestão Multi-Documento:** O pipeline temporário (`tempfile`) agora processa *N* relatórios simultaneamente em lote, preparando o terreno para cruzamentos temporais (ex: Relatório 2024 + Relatório 2025).
 
 ---
 
@@ -54,7 +58,10 @@ A ingestão de dados não estruturados massivos (276 páginas) exigiu a migraç�
 
 ---
 
-## 🚀 Roadmap (Próximos Passos)
+## 🚀 Roadmap (Próximos Passos: Fase 2)
 
-* **Validação Temporal (2024 vs 2025):** Cruzamento e injeção do Relatório ESG 2025 (assim que divulgado) no motor vetorial para auditar automaticamente o cumprimento das metas assumidas no ano anterior.
-* **Busca Híbrida (BM25 + Dense Vectors):** Combinação da busca semântica atual com motores de palavras-chave para garantir que siglas regulatórias específicas nunca sejam ignoradas.
+A infraestrutura base está consolidada. Os próximos passos focam em resolver as limitações intrínsecas da recuperação vetorial densa e na ingestão de dados estruturados complexos:
+
+* **Busca Híbrida (BM25 + Dense Vectors):** Combinação da busca semântica atual com motores clássicos de palavras-chave. Identificamos em testes de estresse que vetores densos diluem termos rigorosos de compliance (ex: "*expressamente proibido*"). A busca híbrida garantirá a recuperação exata de políticas restritivas.
+* **Agentic RAG para Dados Tabulares (CSVs ESG):** Migração do tratamento de planilhas e reportes fiscais (bases brutas de 100+ linhas) do paradigma de *Chunking/ChromaDB* para **Agentes Autônomos (Pandas/SQL Agents)**, permitindo execução de código e matemática exata sobre matrizes de risco climático e representatividade demográfica.
+* **Validação Temporal Cruzada:** Ingestão simultânea do Relatório ESG 2025 para auditar automaticamente o cumprimento das metas assumidas no ano anterior.
