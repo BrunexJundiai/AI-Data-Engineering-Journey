@@ -47,3 +47,19 @@ Abaixo estão as 5 consultas complexas realizadas, seus propósitos e os resulta
 ***
 
 **Conclusão da Arquitetura V2:** O pipeline comprova robustez metrológica e segurança analítica para ambientes de _Compliance_ corporativo.
+
+# 🧪 Testes de Stress e Validação RAG (Versão 2.0)
+
+Este documento registra a bateria de testes aplicada ao **Auditor IA para Compliance ESG**. O objetivo foi testar os limites do pipeline de dados (limpeza e extração estrutural com PyMuPDF) e hardware (limites de VRAM).
+
+## 🛠️ Dimensões de Auditoria Bancária Testadas:
+* **Limites Temporais**: Verificação de metas e dados em diferentes anos fiscais.
+* **Extração Matemática de Tabelas**: Precisão na leitura de dados financeiros e de emissões.
+* **Travas de Alucinação (Zero-Shot)**: Garantia de que o modelo não inventa informações ausentes.
+* **Recuperação Demográfica**: Análise de dados sobre diversidade e inclusão.
+* **Lógica de Governança**: Mapeamento de instâncias decisórias e comitês.
+
+## 📊 Resultados Alcançados
+* **Ingestão Inteligente**: Processamento de centenas de páginas gerando blocos limpos sem estouro de memória.
+* **Precisão de Citação**: Respostas fundamentadas com citação direta de páginas dos relatórios originais.
+* **Cruzamento de Métricas**: Extração correta de emissões de Escopo 1, 2 e 3 de tabelas complexas.
