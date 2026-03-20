@@ -1,67 +1,82 @@
-# Fase 1: Motor RAG Local para Auditoria ESG e Risco Climático 🌍🏦
+# 🌍 Hub de Inteligência Estratégica ESG: Auditoria Híbrida e Comparativo Executivo (V3.0)
 
-## 📝 Descrição do Módulo
-Foco na construção de uma arquitetura de *Retrieval-Augmented Generation* (RAG) para extração de dados densos em relatórios regulatórios de sustentabilidade. O projeto substitui buscas simples por palavras-chave por uma compreensão semântica profunda, permitindo cruzar métricas financeiras (ex: Preço Interno de Carbono) com metas climáticas (Escopos 1, 2 e 3).
+## 📝 Descrição do Projeto
+O **Hub de Inteligência ESG** é uma evolução do motor RAG tradicional para uma plataforma de **Auditoria Analítica de Alta Precisão**. O sistema agora realiza o cruzamento de dados não estruturados (PDFs regulatórios) e estruturados (Planilhas de Indicadores) das maiores instituições financeiras do Brasil (**Itaú, Santander e Banco do Brasil**). 
 
-## 🛠️ Stack Tecnológica (V2.0 - Arquitetura Desacoplada)
-* **LLM (Motor Cognitivo):** `llama-3.3-70b-versatile` (via Groq API para inferência em milissegundos).
-* **Framework Orquestrador:** LangChain com arquitetura moderna **LCEL** (LangChain Expression Language).
-* **Embeddings (Vetorização local):** `intfloat/multilingual-e5-small` (HuggingFace).
-* **Extração Estrutural (ETL):** `PyMuPDF` (Fitz) com ingestão em loop para **Múltiplos Documentos**.
-* **Banco de Dados Vetorial:** ChromaDB.
-* **Aceleração de Hardware:** CUDA (NVIDIA GPU) para processamento paralelo de tensores.
-* **Interface (Front-end):** Streamlit com Gestão de Estado (Session State) para Interface de Chat interativo e renderização de metadados em JSON.
-* **Paradigma de Software:** Orientação a Objetos (POO) com Separação de Preocupações (Backend/Frontend).
+O grande diferencial da Versão 3.0 é a implementação da **Busca Híbrida**, que resolve o problema de "colisão de siglas" e garante que métricas de séries temporais sejam extraídas com 100% de acurácia, permitindo que o sistema atue como um consultor executivo automatizado.
 
 ---
 
-## ⚙️ Engenharia de Dados e Software: A Evolução Definitiva
+## 🛠️ Stack Tecnológica (V3.0 - Enterprise Architecture)
 
-Relatórios ESG do setor financeiro são "pesadelos estruturais" para IAs: possuem layouts em múltiplas colunas, tabelas quebradas entre páginas e uma infinidade de notas de rodapé. Esta versão final resolveu os gargalos reescrevendo o pipeline de ingestão e a arquitetura de software:
-
-1. **Separação de Preocupações (POO):** O projeto migrou de um script monolítico para uma arquitetura profissional dividida em duas camadas: o Cérebro (`bbe_rag_engine.py` como classe Backend autônoma) e a Interface (`bbe_app.py` focado apenas em UI e histórico de chat).
-2. **Arquitetura LCEL e "Stuff" Manual:** Abandono de cadeias opacas (Legacy `RetrievalQA`) em favor da *LangChain Expression Language*. Os blocos de contexto recuperados agora são injetados de forma transparente no prompt, permitindo cruzamento de dados de alta precisão pelo Llama 3.
-3. **Extração Estrutural de Tabelas (PyMuPDF):** Substituição de leitores de PDF ingênuos por um extrator que respeita o fluxo de leitura humano. Isso impediu que a IA misturasse os números do Escopo 1 com o Escopo 2 em tabelas complexas.
-4. **Sanitização e Data Enrichment (Injeção de Metadados):** Implementação de uma camada de limpeza via *Regex* antes da vetorização. O motor "carimba" a origem e o número exato da página fisicamente no início de cada bloco de texto, obrigando o LLM a fundamentar sua resposta com a fonte.
-5. **Otimização Extrema de Hardware (2GB VRAM):** Para viabilizar a vetorização massiva em hardware local restrito, a carga foi transferida da CPU para a GPU (`device: cuda`), operando com lotes reduzidos (`batch_size: 8`) e janela de contexto ampliada (`k=15`) para não perder o raciocínio macro.
-6. **Zero-Shot Constraints e Teste de Estresse:** Prompt de engenharia estrito para a persona de Auditor de Compliance. Aprovado em testes de estresse para limites temporais e alucinações. Se a informação não está no chunk, a IA trava e emite o alerta: *"A informação não consta nos documentos analisados"*.
-7. **Ingestão Multi-Documento:** O pipeline temporário (`tempfile`) agora processa *N* relatórios simultaneamente em lote, preparando o terreno para cruzamentos temporais (ex: Relatório 2024 + Relatório 2025).
+* **LLM (Cérebro):** `llama-3.3-70b-versatile` (Via Groq Cloud).
+* **Orquestração Moderna:** LangChain com **LCEL** (LangChain Expression Language).
+* **Banco Vetorial:** **Qdrant** (Suporte a múltiplos vetores por ponto e Payload Filtering).
+* **Busca Híbrida (Hybrid Search):** * **Densa (Semântica):** `intfloat/multilingual-e5-small` (Processado em **NVIDIA GPU/CUDA**).
+    * **Esparsa (Lexical):** `BM25` via biblioteca `fastembed` (Processado em **CPU/ONNX**).
+* **Ingestão Estrutural (ETL):** `PyMuPDF` para PDFs e `Pandas` para serialização rica de planilhas `.xlsx`.
+* **Interface:** Streamlit com gestão de estado para **Relatórios Executivos e Comparativos**.
 
 ---
 
-## 📸 Fluxo de Uso e Evidências Visuais
+## ⚙️ Engenharia de Dados: A Revolução da Fase 3
 
-Abaixo, as evidências de performance e a rastreabilidade do produto em ação.
+A Fase 3 resolveu os três maiores desafios de RAG em cenários corporativos:
 
-### 1. Aceleração de Infraestrutura (Gargalo de Latência)
-A ingestão de dados não estruturados massivos (276 páginas) exigiu a migração do processamento matemático da CPU para o paralelismo da GPU.
+### 1. Busca Híbrida vs. "Colisão de Siglas"
+Identificamos que vetores densos (semânticos) confundiam siglas como **SAC** (*Serviço de Atendimento*) com **SAC** (*Socioambiental e Climático*). A implementação da busca lexical **BM25** agora garante que termos técnicos exatos sejam recuperados com prioridade, superando a "gravidade semântica" dos textos longos.
 
-* **Antes (Gargalo em CPU):** Alta carga no processador principal e latência extrema na criação dos vetores.
-  ![Gargalo CPU](img/alta_latencia_modelo_CPU.png)
+### 2. Inteligência em Séries Temporais (Unnamed Columns)
+Desenvolvemos uma camada de raciocínio lógico no LLM para interpretar planilhas Excel onde o Pandas gera colunas `Unnamed`. O sistema agora identifica autonomamente a cronologia dos dados (ex: 2022, 2023, 2024), evitando alucinações matemáticas comuns em IAs generativas ao lidar com tabelas desformatadas.
 
-* **Depois (Aceleração em GPU):** Placa de vídeo assumindo a carga, processando o documento em segundos.
-  ![Otimização GPU](img/baixa_latencia_modelo_GPU.png)
-
-### 2. O Pipeline RAG V2 em Ação
-
-* **Ingestão Inteligente:** A prova da eficácia do *Noise Cleaning*. O sistema processou centenas de páginas e gerou 641 blocos limpos, sem estourar a memória.
-  ![Processamento Limpo](img/v2_app_esg_img1.png)
-
-* **Precisão e Citação de Fontes:** A IA cruza a política de crédito com o risco climático e entrega a resposta citando rigorosamente a `[Página 127]` do documento original.
-  ![Resposta com Página](img/v2_app_esg_rsp_chunk.png)
-
-* **Resolução de Consultas Complexas (Tabelas e Cálculos):** A prova de fogo da V2. O LLM extrai as métricas de Escopo 1 e Escopo 2 de colunas distintas da tabela, realiza a soma matemática exata em toneladas de CO2 equivalente (tCO2e) e fornece a rastreabilidade. Zero alucinação em jargões financeiros densos.
-  ![Consulta Complexa](img/exemplo_resposta.png)
-
-* **Rastreabilidade (Compliance):** Abertura do JSON nativo do banco vetorial na interface, comprovando aos auditores humanos o chunk exato que a IA consumiu para gerar o *insight*.
-  ![Auditoria JSON](img/v2_app_esg_chunk_detail.png)
+### 3. Auditoria Comparativa (Multi-Tenant RAG)
+O motor agora isola e compara métricas entre instituições em tempo real. Graças aos filtros de metadados rígidos, é possível realizar um "Join" lógico entre o relatório GRSAC do Santander e a planilha de indicadores do Itaú, gerando insights competitivos imediatos.
 
 ---
 
-## 🚀 Roadmap (Próximos Passos: Fase 2)
+## 📸 Fluxo de Uso e Evidências Visuais (V3.0)
 
-A infraestrutura base está consolidada. Os próximos passos focam em resolver as limitações intrínsecas da recuperação vetorial densa e na ingestão de dados estruturados complexos:
+### 1. Dashboard e Gestão de Documentos
+A interface permite o upload massivo de documentos, com etiquetas dinâmicas por instituição e ano fiscal para organização do acervo.
+![Tela Inicial](img/tela_inicial.png)
+![Processamento Concluído](img/processamento_concluido_visualizacao.png)
 
-* **Busca Híbrida (BM25 + Dense Vectors):** Combinação da busca semântica atual com motores clássicos de palavras-chave. Identificamos em testes de estresse que vetores densos diluem termos rigorosos de compliance (ex: "*expressamente proibido*"). A busca híbrida garantirá a recuperação exata de políticas restritivas.
-* **Agentic RAG para Dados Tabulares (CSVs ESG):** Migração do tratamento de planilhas e reportes fiscais (bases brutas de 100+ linhas) do paradigma de *Chunking/ChromaDB* para **Agentes Autônomos (Pandas/SQL Agents)**, permitindo execução de código e matemática exata sobre matrizes de risco climático e representatividade demográfica.
-* **Validação Temporal Cruzada:** Ingestão simultânea do Relatório ESG 2025 para auditar automaticamente o cumprimento das metas assumidas no ano anterior.
+### 2. Filtros de Auditoria Rígidos
+Implementação de filtros de metadados no Qdrant que garantem que a IA não contamine o contexto de um ano com dados de outro, essencial para compliance.
+![Filtros de Auditoria](img/filtros_auditoria.png)
+
+### 3. Rastreabilidade e Match Score Híbrido
+O sistema exibe o **Match Score** real e o trecho exato utilizado. Note a precisão na extração de dados brutos de planilhas Excel serializadas.
+![Rastreabilidade](img/rastreabilidade_resposta_score.png)
+
+### 4. Consultas Complexas e Comparativos
+A prova de fogo: a IA extrai métricas específicas de múltiplos bancos e gera uma síntese executiva comparando estratégias.
+![Exemplo Pergunta Complexa](img/exemplo_pergunta_complexa.png)
+
+---
+
+## 🧪 Matriz de Testes de Stress (Homologação V3)
+
+| Teste | Objetivo | Resultado |
+| :--- | :--- | :--- |
+| **Recuperação SAC** | Diferenciar Atendimento de Risco Climático em planilhas. | ✅ 100% Acurácia |
+| **Série Temporal** | Identificar dado de 2024 em colunas "Unnamed" sem somar anos. | ✅ 100% Acurácia |
+| **Comparativo RSAC** | Cruzar perdas de crédito Santander (0%) vs Itaú (14%). | ✅ Sucesso |
+| **Cenários NGFS** | Diferenciar metodologias de estresse entre bancos (NGFS vs IEA). | ✅ Sucesso |
+
+---
+
+## 🚀 Como Executar
+
+1. **Requisitos:** Python 3.10+, NVIDIA GPU (Opcional, mas recomendado para Embeddings CUDA).
+2. **Instalação:**
+   ```bash
+   pip install -r requirements.txt
+3. **Configuração:** Certifique-se de configurar sua GROQ_API_KEY no arquivo .env ou segredos do Streamlit.
+4. **Execução:** 
+   ```bash
+   streamlit run app_esg_bbe.py  
+
+---
+
+**Desenvolvido por:** Bruno Felipe de Almeida (BrunexJundiai) - Engenheiro de Dados especializado em soluções de IA e Analytics.
