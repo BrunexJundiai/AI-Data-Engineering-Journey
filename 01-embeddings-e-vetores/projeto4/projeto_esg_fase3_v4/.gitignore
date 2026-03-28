@@ -1,0 +1,8 @@
+# Ignorar códigos fonte, arquivos temporários e imagens extraídas
+src/
+static/images/
+temp_*
+arquivos_processados.json
+__pycache__/
+*.pdf
+*.xlsx
