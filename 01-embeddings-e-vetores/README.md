@@ -60,39 +60,41 @@ O motor de Busca Híbrida RRF cruza narrativas textuais dos PDFs com linhas exat
 
 ---
 
-## 📸 Fluxo de Uso e Evidências Visuais
+## 📸 Fluxo de Uso e Evidências Visuais (V4.0)
 
-### 1. Data Lake e Pipeline de Ingestão (Frontend)
-Upload massivo de documentos (PDFs e Excels) com etiquetagem de metadados dinâmicos e persistência visual do acervo.
-![Tela Inicial e Ingestão](img/tela_inicial1.png)
+### 1. Dashboard e Data Lake (Gerenciamento de Ativos)
+A interface Enterprise permite o gerenciamento centralizado do acervo. Note a persistência visual dos arquivos indexados no Qdrant mesmo após o recarregamento da página (F5), garantida pelo State Persistence em JSON.
+
+![Tela Inicial - Hub ESG](img/tela_inicial.png)
+
+### 2. Pipeline de Ingestão e Etiquetagem (ETL)
+Processo de "etiquetagem rígida" de metadados (Instituição, Ano, Tópico) antes do processamento. Isso garante o isolamento de contexto necessário para auditorias de compliance.
+
 <p align="center">
-  <img src="img/menu_esquerda.png" width="30%">
-  <img src="img/menu_esquerda2.png" width="30%">
-  <img src="img/menu_esquerda3.png" width="30%">
+  <img src="img/etiquetar_doc.png" width="45%" alt="Etiquetagem de Documentos">
+  <img src="img/carregar_arquivos.png" width="45%" alt="Upload e Carregamento">
 </p>
 
-### 2. Auditoria Cruzada (Stress Test: Itaú vs Bradesco)
-A IA cruza dados de diferentes relatórios e anos, aplicando filtros rigorosos. Resposta direta, sem alucinação, demonstrando falta de dados quando necessário e extraindo métricas exatas de diversidade e governança.
-![Exemplo Comparativo 1](img/resposta1.png)
-![Exemplo Comparativo 2](img/resposta1_2.png)
-![Exemplo Comparativo 3](img/resposta1_3.png)
+### 3. Processamento Omnichannel e Persistência
+Evidência do processamento assíncrono de múltiplos formatos (PDF e Excel) e a confirmação visual da indexação no banco vetorial ativo.
 
-### 3. Governança e Rastreabilidade com Zero Alucinação
-Identificação clara de hierarquias complexas (Comitês e Conselhos de Administração) suportada pelo *Match Score* transparente da Busca Híbrida.
-![Exemplo Governança](img/resposta3.png)
-![Rastreabilidade Governança](img/resposta3_2.png)
+<p align="center">
+  <img src="img/processamento_arquivos.png" width="31%" alt="Processamento em Lote">
+  <img src="img/processamento_arquivos2.png" width="31%" alt="Processamento Omnichannel">
+  <img src="img/processamento_concluido_visualizacao.png" width="31%" alt="Indexação Concluída">
+</p>
+
+### 4. Auditoria, Rastreabilidade e Busca Híbrida
+A "prova de fogo" da arquitetura. A IA utiliza filtros de auditoria rígidos para isolar anos fiscais e utiliza a Busca Híbrida RRF para localizar dados exatos em planilhas Excel serializadas, exibindo o trecho exato e o Match Score.
+
+![Filtros de Auditoria Rígidos](img/filtros_auditoria.png)
+![Rastreabilidade e Score Híbrido](img/rastreabilidade_resposta_score.png)
+
+### 5. Consultas Complexas e Comparativo Executivo Multimodal
+A IA realiza o cruzamento e comparação de estratégias entre múltiplos bancos e anos fiscais (Itaú 2024 vs Bradesco 2023). Note a síntese executiva gerada e a renderização das evidências visuais (multimodalidade) no corpo do chat.
+
+![Síntese Executiva Comparativa](img/image_f02d44.png)
+![Comparativo com Evidência Multimodal](img/exemplo_pergunta_complexa.png)
 
 ---
-
-## 🚀 Como Executar Localmente
-
-### 1. Pré-Requisitos
-* Python 3.10+
-* Conta ativa na Groq Cloud e OpenAI (para as API Keys).
-
-### 2. Instalação
-Clone o repositório e instale as dependências:
-```bash
-git clone [https://github.com/BrunexJundiai/AI-Data-Engineering-Journey.git](https://github.com/BrunexJundiai/AI-Data-Engineering-Journey.git)
-cd projeto_esg_fase3_v4
-pip install -r requirements.txt
+**Desenvolvido por Bruno Felipe de Almeida** *Especialista em BI & Analytics (USP) | Engenheiro de Dados* [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/bruno-felipe-de-almeida/)
